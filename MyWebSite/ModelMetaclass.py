@@ -22,6 +22,9 @@ class ModelMetaclass(type):
         primaryKey=None
         for k,v in attrs.items():
             if isinstance(v,Field):
+                logging.info('found mapping:%s==>%s'%(k,v))
+                mapings[k]=v
+
 
 
 
