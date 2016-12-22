@@ -23,3 +23,25 @@ class User(Model):
 class Blog(Model):
     __table__='blogs'
 
+    #设置博客表的基本属性
+    id=StringField(primary_key=True,default=next_id,ddl='varchar50')
+    user_id=StringField(ddl='varchar(50)')
+    user_name=StringField(ddl='varchar(50)')
+    user_image=StringField(ddl='varchar(500)')
+    user_name=StringField(ddl='varchar(50)')
+    summary=StringField(ddl='varchar(200)')
+    content=TextField()
+    create_at=FloatField(default=time.time())
+
+#评论表的基本内容
+class Comment(Model):
+    __table__='comment'
+
+    #设置评论表的基本信息
+    id = StringField(primary_key=True, default=next_id, ddl='varchar(50)')
+    blog_id = StringField(ddl='varchar(50)')
+    user_id = StringField(ddl='varchar(50)')
+    user_name = StringField(ddl='varchar(50)')
+    user_image = StringField(ddl='varchar(500)')
+    content = TextField()
+    created_at = FloatField(default=time.time)

@@ -96,7 +96,6 @@ def auth_factory(app, handler):
         #请求路径以‘/manage/’开头，且cookie用户信息不为空或cookie用户权限是否为管理员权限：
         if request.path.startswith('/manage/') and (request.__user__ is None or request.__user__.admin):
             return web.HTTPFound('/signin')
-
         return (yield from handler(request))
     return auth
 
@@ -155,22 +154,22 @@ def response_factory(app, handler):
         if isinstance(r, dict):
             #获取字典中的env环境对象：
             template = r.get('__template__')
+        if template is None:
+            #json.dumps()：以JSON编码格式转换python对象，返回一个str。“ensure_ascii=False”：非ASCII字符不转换，原样输出。
+            resp = web.Response(body=json.dumps(r, ensure_ascii=False, default=lambda o: o.__dict__).encode('utf-8'))
+            #设置实体MIME类型：
+            resp.content_type = 'application/json;charset=utf-8'
+            return resp
+        else:
+            #取出cookie用户信息绑定到request对象：
+            r['__user__'] = request.__user__
+            #jinja2.Environment.get_template()：加载指定模板。
+            #jinja2.Template.render()：返回模板unicode字符串。
+            resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
+            resp.content_type = 'text/html;charset=utf-8'
+            return resp
+            #判断是否为“int”类型且 100<= r <600，直接返回r：
             #判断env环境对象是否为None：
-            if template is None:
-                #json.dumps()：以JSON编码格式转换python对象，返回一个str。“ensure_ascii=False”：非ASCII字符不转换，原样输出。
-                resp = web.Response(body=json.dumps(r, ensure_ascii=False, default=lambda o: o.__dict__).encode('utf-8'))
-                #设置实体MIME类型：
-                resp.content_type = 'application/json;charset=utf-8'
-                return resp
-            else:
-                #取出cookie用户信息绑定到request对象：
-                r['__user__'] = request.__user__
-                #jinja2.Environment.get_template()：加载指定模板。
-                #jinja2.Template.render()：返回模板unicode字符串。
-                resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
-                resp.content_type = 'text/html;charset=utf-8'
-                return resp
-        #判断是否为“int”类型且 100<= r <600，直接返回r：
         if isinstance(r, int) and r >= 100 and r < 600:
             return web.Response(r)
         #判断是否为“tuple”类型且 tuple长度为2：
